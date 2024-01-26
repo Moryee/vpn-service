@@ -7,6 +7,7 @@ from django.http import QueryDict
 from urllib.parse import urlparse, urljoin
 from django.urls import reverse_lazy
 from sites.models import Site
+from tldextract import tldextract
 
 
 class ProxyIndexView(LoginRequiredMixin, View):
@@ -47,6 +48,7 @@ class ProxyIndexView(LoginRequiredMixin, View):
         requests_args['params'] = params
 
         response = requests.request(request.method, url, **requests_args)
+        encoding = response.encoding if 'charset' in response.headers.get('content-type', '').lower() else None
         modified_content = response.content
         view_link = reverse_lazy('proxy:index')
 
@@ -54,17 +56,22 @@ class ProxyIndexView(LoginRequiredMixin, View):
             matched_url = match.group(1)
 
             matched_url_netloc = urlparse(matched_url).netloc
-            # if '//' in matched_url:
-            if matched_url_netloc == urlparse(url).netloc:
-                matched_url = '/'.join(matched_url.split('//')[1].split('/')[1:])
+            matched_url_domain = tldextract.extract(matched_url).domain
+            url_domain = tldextract.extract(url).domain
+            if matched_url_domain == url_domain:
+                pass
             elif matched_url_netloc:
                 return f'href="{matched_url}"'
-
-            matched_url = urljoin(url, matched_url)
+            else:
+                matched_url = urljoin(url, matched_url)
             replacement_url = f'href="{view_link}?url={matched_url}&pk={pk}"'
             return replacement_url
 
-        modified_content = re.sub(r'href="([^"]+)"', replace_url, modified_content.decode('utf-8', errors='ignore')).encode('utf-8')
+        # Decode the content using the correct encoding
+        if encoding is not None:
+            modified_content = re.sub(r'href="([^"]+)"', replace_url, modified_content.decode(encoding)).encode(encoding)
+        else:
+            modified_content = response.text
 
         proxy_response = HttpResponse(
             modified_content,
