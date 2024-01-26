@@ -22,7 +22,7 @@ class ProxyIndexView(LoginRequiredMixin, View):
         if request.user != site.user:
             return HttpResponse('You are not owner of this site', status=400)
 
-        requests_args = (args or {}).copy()
+        requests_args = (args or {'headers': {'accept-encoding': 'text/html'}}).copy()
         headers = self.get_headers(request.META)
         params = request.GET.copy()
 
