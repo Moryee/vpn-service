@@ -1,0 +1,21 @@
+{% extends "common/base.html" %}
+
+{% block content %}
+
+<h1>Detail & Update site</h1>
+<form action="{% url 'sites:site-update' site.pk %}" method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="name">Site name</label>
+      <input type="text" class="form-control" id="name" name="name" placeholder="Enter site name" value="{{form.name.value}}">
+    </div>
+    <div class="form-group mb-2">
+      <label for="url">Site URL</label>
+      <input type="text" class="form-control" id="url" name="url" placeholder="Enter site URL" value="{{form.url.value}}">
+    </div>
+    <p>Visiting Count: {{ site.visiting_count }}</p>
+    <p>Data Volume: {{ site.data_volume }}</p>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+{% endblock %}

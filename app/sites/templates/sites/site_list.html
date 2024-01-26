@@ -1,0 +1,58 @@
+{% extends "common/base.html" %}
+
+{% load custom_filters %}
+
+{% block head %}
+<style>
+    .d-flex {
+        gap: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<ul class="messages mb-2 mt-2 p-0">
+    {% for message in messages %}
+    <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<h1>Create new site</h1>
+<form action="{% url 'sites:site-create' %}" method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="name">Site name</label>
+      <input type="text" class="form-control" id="name" name="name" placeholder="Enter site name">
+    </div>
+    <div class="form-group mb-2">
+      <label for="url">Site URL</label>
+      <input type="text" class="form-control" id="url" name="url" placeholder="Enter site URL">
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+<h1>Sites</h1>
+{% for site in sites %}
+    <div class="card row pb-2 mb-2 mt-2">
+        <div class="col-md-12">
+            <h2>{{ site.name|truncatechars:100 }}</h2>
+            <p><bold class="fw-bold">Url</bold>: {{ site.url }}</p>
+            <p><bold class="fw-bold">Visiting Count</bold>: {{ site.visiting_count }}</p>
+            <p><bold class="fw-bold">Data Volume</bold>: {{ site.data_volume|divide:1000000 }} mb</p>
+
+            <div class="d-flex flex-row">
+                <a class="btn btn-success" href="{% url 'proxy:index' %}?url={{site.url}}&pk={{site.pk}}" target="_blank">Visit</a>
+                <a class="btn btn-primary" href="{% url 'sites:site-detail' site.id %}">Update</a>
+                <form class="ml-2" action="{% url 'sites:site-delete' site.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock %}
